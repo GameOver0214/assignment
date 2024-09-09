@@ -3,7 +3,7 @@ import pandas as pd
 import random
 
 # Read the dataset (ensure this points to your actual file location)
-df = pd.read_csv(r'C:\Users\yeder\Desktop\Assignment\zomato_extracted.csv')
+df = pd.read_csv('zomato_extracted.csv')
 
 # Streamlit app layout
 st.title('Restaurant Recommendation System')
