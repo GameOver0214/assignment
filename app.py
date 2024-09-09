@@ -3,7 +3,7 @@ import pandas as pd
 import random
 
 # Read the dataset (ensure this points to your actual file location)
-df = pd.read_csv(r'C:\Users\yeder\Desktop\Assignment\zomato_extracted.csv'
+df = pd.read_csv(r'C:\Users\yeder\Desktop\Assignment\zomato_extracted.csv')
 
 # Assuming your dataset has 'name', 'rest_type', and 'url' columns
 # Check the first few rows of the dataset (uncomment to see)
