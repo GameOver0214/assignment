@@ -5,9 +5,22 @@ import random
 # Read the dataset (ensure this points to your actual file location)
 df = pd.read_csv(r'C:\Users\yeder\Desktop\Assignment\zomato_extracted.csv')
 
-# Assuming your dataset has 'name', 'rest_type', and 'url' columns
-# Check the first few rows of the dataset (uncomment to see)
-# st.write(df.head())
+# Streamlit app layout
+st.title('Restaurant Recommendation System')
+
+# Display restaurant information
+st.subheader('Choose a Restaurant')
+restaurant_names = df['name'].tolist()
+selected_restaurant = st.selectbox('Select a restaurant', restaurant_names)
+
+# Display details of the selected restaurant
+restaurant_info = df[df['name'] == selected_restaurant]
+if not restaurant_info.empty:
+    st.write(f"**Name:** {selected_restaurant}")
+    st.write(f"**Type:** {restaurant_info['rest_type'].values[0]}")
+    st.write(f"**URL:** {restaurant_info['url'].values[0]}")
+else:
+    st.write("Restaurant not found.")
 
 def recommend_restaurants(current_restaurant, df, num_recommendations=3):
     # Get the type of the current restaurant
@@ -31,28 +44,15 @@ def recommend_restaurants(current_restaurant, df, num_recommendations=3):
     
     return [(rest['name'], rest['url']) for rest in recommended]
 
-# Streamlit app layout
-st.title('Restaurant Recommendation System')
-
-# Display restaurant information
-st.subheader('Choose a Restaurant')
-restaurant_names = df['name'].tolist()
-selected_restaurant = st.selectbox('Select a restaurant', restaurant_names)
-
-# Display details of the selected restaurant
-restaurant_info = df[df['name'] == selected_restaurant]
-if not restaurant_info.empty:
-    st.write(f"**Name:** {selected_restaurant}")
-    st.write(f"**Type:** {restaurant_info['rest_type'].values[0]}")
-    st.write(f"**URL:** {restaurant_info['url'].values[0]}")
-else:
-    st.write("Restaurant not found.")
-
 if st.button('Recommend Similar Restaurants'):
     # Get recommendations
     recommended_restaurants = recommend_restaurants(selected_restaurant, df)
     
     # Display recommendations
     st.subheader('Recommended Restaurants')
-    for restaurant, url in recommended_restaurants:
-        st.write(f"- [{restaurant}]({url})")
+    if recommended_restaurants:
+        for restaurant, url in recommended_restaurants:
+            st.write(f"- [{restaurant}]({url})")
+    else:
+        st.write("No recommendations available.")
+
