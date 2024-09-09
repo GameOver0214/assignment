@@ -1,4 +1,3 @@
-import streamlit as st
 import pandas as pd
 import random
 
@@ -21,23 +20,23 @@ if uploaded_file is not None:
         def recommend_restaurants(current_restaurant, df, num_recommendations=3):
             # Get the type of the current restaurant
             rest_type = df[df['name'] == current_restaurant]['rest_type'].values
-            
+
             if len(rest_type) == 0:
                 return [("Current restaurant information not found, please check the restaurant name.", "")]
-            
+
             # Filter restaurants with the same type as the current restaurant
             same_type_restaurants = df[df['rest_type'] == rest_type[0]]
-            
+
             # Exclude the current restaurant being viewed
             recommendations = same_type_restaurants[same_type_restaurants['name'] != current_restaurant]
-            
+
             if recommendations.empty:
                 return [("No restaurants of the same type were found.", "")]
-            
+
             # Randomly recommend a specified number of restaurants
             recommended = random.sample(recommendations.to_dict(orient='records'), 
                                          min(num_recommendations, len(recommendations)))
-            
+
             return [(rest['name'], rest['url']) for rest in recommended]
 
         # Display details of the selected restaurant
