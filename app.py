@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import random
+pip install tabulate
 
 # Load the dataset
 df = pd.read_csv('zomato_extracted.csv')
