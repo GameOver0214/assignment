@@ -2,12 +2,7 @@ import streamlit as st
 import pandas as pd
 import random
 
-# Read the dataset (ensure this points to your actual file location)
 df = pd.read_csv('zomato_extracted.csv')
-
-# Assuming your dataset has 'name', 'rest_type', and 'url' columns
-# Check the first few rows of the dataset (uncomment to see)
-# st.write(df.head())
 
 def recommend_restaurants(current_restaurant, df, num_recommendations=3):
     # Get the type of the current restaurant
@@ -31,22 +26,21 @@ def recommend_restaurants(current_restaurant, df, num_recommendations=3):
     
     return [(rest['name'], rest['url']) for rest in recommended]
 
-# Streamlit app layout
 st.title('Restaurant Recommendation System')
 
-# Display restaurant information
 st.subheader('Choose a Restaurant')
 restaurant_names = df['name'].tolist()
 selected_restaurant = st.selectbox('Select a restaurant', restaurant_names)
 
-# Display details of the selected restaurant
 restaurant_info = df[df['name'] == selected_restaurant]
 if not restaurant_info.empty:
     st.write(f"**Name:** {selected_restaurant}")
-    st.write(f"**Type:** {restaurant_info['rest_type'].values[0]}")
+    st.write(f"**Restaurant Type:** {restaurant_info['rest_type'].values[0]}")
+    st.write(f"**Crusine Type:** {restaurant_info['crusine'].values[0]}")
     st.write(f"**URL:** {restaurant_info['url'].values[0]}")
+   
 else:
-    st.write("Restaurant not found.")
+    st.write("Restaurant not found. Please Choose / Enter another one!")
 
 if st.button('Recommend Similar Restaurants'):
     # Get recommendations
