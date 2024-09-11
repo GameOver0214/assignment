@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 import random
-pip install tabulate
 
 # Load the dataset
 df = pd.read_csv('zomato_extracted.csv')
@@ -55,12 +54,12 @@ if recommended_restaurants[0][0] != "Current restaurant information not found, p
     st.subheader('Recommended Restaurants')
     
     # Creating a dataframe to display recommendations in a table
-    recommendations_df = pd.DataFrame(recommended_restaurants, columns=["name", "url"])
+    recommendations_df = pd.DataFrame(recommended_restaurants, columns=["Restaurant", "Link"])
     
-    # Creating clickable links for the restaurants
-    recommendations_df['name'] = recommendations_df.apply(lambda row: f"[{row['name']}]({row['url']})", axis=1)
+    # Creating clickable links for the restaurants in the 'Link' column
+    recommendations_df['Link'] = recommendations_df['Link'].apply(lambda url: f'<a href="{url}">{url}</a>')
     
-    # Using st.markdown to display the clickable links in a table format
-    st.markdown(recommendations_df[['name']].to_markdown(index=False), unsafe_allow_html=True)
+    # Display the dataframe using st.markdown with unsafe_allow_html to render links
+    st.write(recommendations_df.to_html(escape=False, index=False), unsafe_allow_html=True)
 else:
     st.write(recommended_restaurants[0][0])
