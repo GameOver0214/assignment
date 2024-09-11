@@ -37,7 +37,7 @@ if not restaurant_info.empty:
     st.write(f"**Name:** {selected_restaurant}")
     st.write(f"**Restaurant Type:** {restaurant_info['rest_type'].values[0]}")
     st.write(f"**Cuisines Type:** {restaurant_info['cuisines'].values[0]}")
-    st.write(f"[{restaurant_info['name'].values[0]}]({restaurant_info['url'].values[0]})")
+    st.write(f"**URL:**[{restaurant_info['name'].values[0]}]({restaurant_info['url'].values[0]})")
    
 else:
     st.write("Restaurant not found. Please Choose / Enter another one!")
