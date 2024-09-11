@@ -51,7 +51,7 @@ recommended_restaurants = recommend_restaurants(selected_restaurant, df)
 
 # Display recommendations in a table format if valid recommendations exist
 if recommended_restaurants[0][0] != "Current restaurant information not found, please check the restaurant name.":
-    st.subheader('Recommended Restaurants')
+    st.subheader('The Restaurant that You May Also Like:')
     
     # Creating a dataframe to display recommendations in a table
     recommendations_df = pd.DataFrame(recommended_restaurants, columns=["Restaurant", "Link"])
