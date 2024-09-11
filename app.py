@@ -9,6 +9,7 @@ df = pd.read_csv('zomato_extracted.csv')
 
 df['rest_type'] = df['rest_type'].fillna('')  # Fill NaN with empty string
 df['rest_type'] = df['rest_type'].astype(str)  # Ensure all entries are strings
+
 # Function to recommend restaurants based on cosine similarity
 def recommend_restaurants(current_restaurant, df, num_recommendations=3):
     # Create a TF-IDF Vectorizer to analyze cuisines
@@ -30,7 +31,7 @@ def recommend_restaurants(current_restaurant, df, num_recommendations=3):
     # Get the indices of the recommended restaurants
     restaurant_indices = [i[0] for i in sim_scores[1:num_recommendations + 1]]  # exclude the first one (itself)
     
-    return df.iloc[restaurant_indices][['name', 'rest_type', 'cuisines']]
+    return df.iloc[restaurant_indices][['name', 'rest_type', 'cuisines']].drop_duplicates().sort_values(by='name')
 
 # Streamlit app title
 st.title('Restaurant Recommendation System')
