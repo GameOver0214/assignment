@@ -26,6 +26,7 @@ def recommend_restaurants(current_restaurant, df, num_recommendations=3):
     recommended = random.sample(recommendations.to_dict(orient='records'), 
                                  min(num_recommendations, len(recommendations)))
     
+    # Return name and rest_type only (no cuisines and rate)
     return [(rest['name'], rest['rest_type']) for rest in recommended]
 
 # Streamlit app title
@@ -50,18 +51,13 @@ else:
 recommended_restaurants = recommend_restaurants(selected_restaurant, df)
 
 # Display recommendations in a table format if valid recommendations exist
-if recommended_restaurants[0][0] != "Current restaurant information not found, please check the restaurant name.":
+if recommended_restaurants and recommended_restaurants[0][0] != "Current restaurant information not found, please check the restaurant name.":
     st.subheader('Recommended Restaurants')
     
-    # Creating a dataframe to display recommendations in a table
-    recommendations_df = pd.DataFrame(recommended_restaurants, columns=["name", "rest_type", "cuisines", "rate"])
+    # Creating a DataFrame to display recommendations in a table
+    recommendations_df = pd.DataFrame(recommended_restaurants, columns=["Restaurant", "Rest Type"])
     
-    # Creating clickable links for the restaurants using only the restaurant name
-    recommendations_df['Restaurant'] = recommendations_df.apply(
-        lambda row: f'<a href="{restaurant_info["url"].values[0]}">{row["Restaurant"]}</a>', axis=1
-    )
-    
-    # Display the dataframe using st.markdown with unsafe_allow_html to render links
+    # Display the DataFrame
     st.write(recommendations_df.to_html(escape=False, index=False), unsafe_allow_html=True)
 else:
     st.write(recommended_restaurants[0][0])
