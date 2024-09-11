@@ -1,8 +1,10 @@
 import streamlit as st
 import pandas as pd
 import random
+
 # Load the dataset
 df = pd.read_csv('zomato_extracted.csv')
+
 # Function to recommend restaurants based on the current restaurant's type
 def recommend_restaurants(current_restaurant, df, num_recommendations=3):
     # Get the type of the current restaurant
@@ -24,13 +26,16 @@ def recommend_restaurants(current_restaurant, df, num_recommendations=3):
     recommended = random.sample(recommendations.to_dict(orient='records'), 
                                  min(num_recommendations, len(recommendations)))
     
-    return [(rest['name'], rest['url']) for rest in recommended]
+    return [(rest['name'], rest['rest_type']) for rest in recommended]
+
 # Streamlit app title
 st.title('Restaurant Recommendation System')
+
 # Restaurant selection
 st.subheader('Choose a Restaurant')
 restaurant_names = df['name'].tolist()
 selected_restaurant = st.selectbox('Select a restaurant', restaurant_names)
+
 # Display selected restaurant details
 restaurant_info = df[df['name'] == selected_restaurant]
 if not restaurant_info.empty:
@@ -40,19 +45,22 @@ if not restaurant_info.empty:
     st.write(f"**URL:** [{restaurant_info['name'].values[0]}]({restaurant_info['url'].values[0]})")
 else:
     st.write("Restaurant not found. Please choose/enter another one!")
+
 # Directly show recommendations without a button
 recommended_restaurants = recommend_restaurants(selected_restaurant, df)
 
 # Display recommendations in a table format if valid recommendations exist
 if recommended_restaurants[0][0] != "Current restaurant information not found, please check the restaurant name.":
-    st.subheader('The Restaurant that You May Also Like:')
-
+    st.subheader('Recommended Restaurants')
+    
     # Creating a dataframe to display recommendations in a table
-    recommendations_df = pd.DataFrame(recommended_restaurants, columns=["Restaurant", "Link"])
-
-    # Creating clickable links for the restaurants in the 'Link' column
-    recommendations_df['Link'] = recommendations_df['Link'].apply(lambda url: f'<a href="{url}">{url}</a>')
-
+    recommendations_df = pd.DataFrame(recommended_restaurants, columns=["Restaurant", "Rest Type"])
+    
+    # Creating clickable links for the restaurants using only the restaurant name
+    recommendations_df['Restaurant'] = recommendations_df.apply(
+        lambda row: f'<a href="{restaurant_info["url"].values[0]}">{row["Restaurant"]}</a>', axis=1
+    )
+    
     # Display the dataframe using st.markdown with unsafe_allow_html to render links
     st.write(recommendations_df.to_html(escape=False, index=False), unsafe_allow_html=True)
 else:
