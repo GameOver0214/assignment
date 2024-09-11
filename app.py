@@ -7,6 +7,8 @@ import random
 # Load the dataset
 df = pd.read_csv('zomato_extracted.csv')
 
+df['cuisines'] = df['cuisines'].fillna('')  # Fill NaN with empty string
+df['cuisines'] = df['cuisines'].astype(str)  # Ensure all entries are strings
 # Function to recommend restaurants based on cosine similarity
 def recommend_restaurants(current_restaurant, df, num_recommendations=3):
     # Create a TF-IDF Vectorizer to analyze cuisines
