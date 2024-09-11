@@ -36,7 +36,7 @@ restaurant_info = df[df['name'] == selected_restaurant]
 if not restaurant_info.empty:
     st.write(f"**Name:** {selected_restaurant}")
     st.write(f"**Restaurant Type:** {restaurant_info['rest_type'].values[0]}")
-    st.write(f"**Crusine Type:** {restaurant_info['crusine'].values[0]}")
+    st.write(f"**Cuisines Type:** {restaurant_info['cuisines'].values[0]}")
     st.write(f"**URL:** {restaurant_info['url'].values[0]}")
    
 else:
