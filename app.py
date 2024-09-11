@@ -13,7 +13,7 @@ df['cuisines'] = df['cuisines'].astype(str)  # Ensure all entries are strings
 def recommend_restaurants(current_restaurant, df, num_recommendations=3):
     # Create a TF-IDF Vectorizer to analyze cuisines
     tfidf = TfidfVectorizer(stop_words='english')
-    tfidf_matrix = tfidf.fit_transform(df['cuisines'])
+    tfidf_matrix = tfidf.fit_transform(df['rest_type'])
     
     # Compute the cosine similarity matrix
     cosine_sim = cosine_similarity(tfidf_matrix, tfidf_matrix)
