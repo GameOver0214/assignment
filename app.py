@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-import random
 
 # Load the dataset
 df = pd.read_csv('zomato_extracted.csv')
@@ -12,26 +11,32 @@ df['cuisines'] = df['cuisines'].astype(str)  # Ensure all entries are strings
 
 # Function to recommend restaurants based on cosine similarity
 def recommend_restaurants(current_restaurant, df, num_recommendations=3):
+    # Get the selected restaurant's cuisines
+    current_cuisines = df.loc[df['name'] == current_restaurant, 'cuisines'].values[0]
+    
+    # Filter the dataframe to only include restaurants with matching cuisines
+    df_filtered = df[df['cuisines'].str.contains(current_cuisines, case=False, na=False) & (df['name'] != current_restaurant)]
+    
     # Create a TF-IDF Vectorizer to analyze cuisines
     tfidf = TfidfVectorizer(stop_words='english')
-    tfidf_matrix = tfidf.fit_transform(df['cuisines'])
+    tfidf_matrix = tfidf.fit_transform(df_filtered['cuisines'])
     
     # Compute the cosine similarity matrix
     cosine_sim = cosine_similarity(tfidf_matrix, tfidf_matrix)
     
-    # Get the index of the current restaurant
-    idx = df.index[df['name'] == current_restaurant].tolist()[0]
+    # Get the index of the filtered restaurants
+    restaurant_indices = df_filtered.index.tolist()
     
     # Get the pairwise similarity scores
-    sim_scores = list(enumerate(cosine_sim[idx]))
+    sim_scores = list(enumerate(cosine_sim))
     
-    # Sort the restaurants based on similarity scores
+    # Sort the filtered restaurants based on similarity scores
     sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
-    
+
     # Get the indices of the recommended restaurants
-    restaurant_indices = [i[0] for i in sim_scores[1:num_recommendations + 1]]  # exclude the first one (itself)
+    recommended_indices = [restaurant_indices[i[0]] for i in sim_scores[1:num_recommendations + 1]]  # exclude the first one (itself)
     
-    return df.iloc[restaurant_indices][['name', 'rest_type', 'cuisines']].drop_duplicates().sort_values(by='name')
+    return df.iloc[recommended_indices][['name', 'rest_type', 'cuisines']].drop_duplicates().sort_values(by='name')
 
 # Streamlit app title
 st.title('Restaurant Recommendation System')
