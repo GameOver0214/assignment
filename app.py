@@ -81,9 +81,18 @@ if indices.size > 0:
     recommended_restaurants = recommended_restaurants[recommended_restaurants['name'] != selected_restaurant]
     
     if not recommended_restaurants.empty:
-        # Display the dataframe using st.table
-        st.table(recommended_restaurants[['name', 'rest_type', 'cuisines', 'url']].apply(lambda x: f"[{x['name']}]({x['url']})", axis=1))
+        # Create a new DataFrame to store formatted results
+        formatted_recommendations = pd.DataFrame({
+            'Name': recommended_restaurants['name'],
+            'Rest Type': recommended_restaurants['rest_type'],
+            'Cuisines': recommended_restaurants['cuisines'],
+            'URL': recommended_restaurants['url'].apply(lambda x: f"[{recommended_restaurants['name'].iloc[recommended_restaurants['url'] == x].values[0]}]({x})")
+        })
+        
+        # Display the formatted DataFrame using st.table
+        st.table(formatted_recommendations)
     else:
         st.write("No recommendations available.")
 else:
     st.write("No recommendations available.")
+
