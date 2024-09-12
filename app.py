@@ -87,6 +87,9 @@ if recommended_restaurants and recommended_restaurants[0][0] != "Current restaur
 
     # Remove duplicate rows
     recommendations_df = recommendations_df.drop_duplicates()
+    
+    def create_details_link(url):
+        return f'<a href="{url}" target="_blank">More Details</a>'
 
     # Make restaurant names clickable links
     recommendations_df['URL'] = recommendations_df.apply(lambda x: f"[{x['Restaurant']}]({x['URL']})", axis=1)
