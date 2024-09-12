@@ -75,23 +75,18 @@ st.write(f"**URL:** [{restaurant_info['name']}]({restaurant_info['url']})")
 distances, indices = knn.kneighbors(X_scaled[selected_index].reshape(1, -1))
 
 # Display recommendations in a table format
-# Display recommendations in a table format
 if indices.size > 0:
     st.subheader('Recommended Restaurants')
     recommended_restaurants = df.iloc[indices.flatten()]
     recommended_restaurants = recommended_restaurants[recommended_restaurants['name'] != selected_restaurant]
     
     if not recommended_restaurants.empty:
-        # Create a new DataFrame to store formatted results
-        formatted_recommendations = pd.DataFrame({
-            'Name': recommended_restaurants['name'],
-            'Rest Type': recommended_restaurants['rest_type'],
-            'Cuisines': recommended_restaurants['cuisines'],
-            'URL': recommended_restaurants['url'].apply(lambda x: f"[{x.split('/')[-1]}]({x})")  # Use last part of URL as the display name
-        })
+        # Create a DataFrame for the recommended restaurants without URLs
+        recommended_df = recommended_restaurants[['name', 'rest_type', 'cuisines']]
+        recommended_df['name'] = recommended_df['name'].apply(lambda x: f"{x}")  # Just display the name
         
-        # Display the formatted DataFrame using st.table
-        st.table(formatted_recommendations)
+        # Display the dataframe using st.table
+        st.table(recommended_df)
     else:
         st.write("No recommendations available.")
 else:
