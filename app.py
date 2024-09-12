@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import linear_kernel
+import random
 
 # Load the dataset
 df = pd.read_csv('zomato_extracted.csv')
@@ -25,9 +24,13 @@ def recommend_restaurants(current_restaurant, df, num_recommendations=3):
 
     # Get the cuisines of the selected restaurant
     current_cuisines = df['cuisines'][idx]
+    cuisines_list = [cuisine.strip() for cuisine in current_cuisines.split(',')]
 
-    # Filter restaurants based on similar cuisines
-    similar_restaurants = df[df['cuisines'].str.contains(current_cuisines, case=False, na=False)]
+    if not cuisines_list:
+        return [("No cuisines information available for the selected restaurant.", "", "", "")]
+
+    # Filter restaurants based on any of the cuisines of the selected restaurant
+    similar_restaurants = df[df['cuisines'].apply(lambda x: any(cuisine in x for cuisine in cuisines_list))]
     
     # Exclude the current restaurant from recommendations
     similar_restaurants = similar_restaurants[similar_restaurants['name'] != current_restaurant]
@@ -58,20 +61,37 @@ if not restaurant_info.empty:
 else:
     st.write("Restaurant not found. Please choose/enter another one!")
 
+# Suggest a cuisine type from the selected restaurant
+def suggest_cuisine(cuisines):
+    # Split the cuisines string into a list
+    cuisines_list = [cuisine.strip() for cuisine in cuisines.split(',')]
+    if cuisines_list:
+        # Randomly select one cuisine type
+        return random.choice(cuisines_list)
+    else:
+        return "No cuisine types available"
+
+# Display a suggested cuisine type
+suggested_cuisine = suggest_cuisine(restaurant_info['cuisines'].values[0])
+st.write(f"**Suggested Cuisine Type:** {suggested_cuisine}")
+
 # Get recommendations based on cuisines
 recommended_restaurants = recommend_restaurants(selected_restaurant, df)
 
-# Display recommendations in a table format if valid recommendations exist
-if recommended_restaurants[0][0] != "Current restaurant information not found, please check the restaurant name.":
+# Check if recommendations are valid
+if recommended_restaurants and recommended_restaurants[0][0] != "Current restaurant information not found, please check the restaurant name.":
     st.subheader('Recommended Restaurants')
     
     # Creating a dataframe to display recommendations in a table
     recommendations_df = pd.DataFrame(recommended_restaurants, columns=["Restaurant", "Rest Type", "Cuisines", "URL"])
-    recommendations_df = recommendations_df.drop_duplicates("Restaurant")
+
+    # Remove duplicate rows
+    recommendations_df = recommendations_df.drop_duplicates()
+
     # Make restaurant names clickable links
     recommendations_df['URL'] = recommendations_df.apply(lambda x: f"[{x['Restaurant']}]({x['URL']})", axis=1)
     
     # Display the dataframe using st.markdown for clickable URLs
     st.markdown(recommendations_df.to_markdown(index=False), unsafe_allow_html=True)
 else:
-    st.write(recommended_restaurants[0][0])
+    st.write("No recommendations available based on the selected restaurant.")
