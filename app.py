@@ -75,6 +75,7 @@ st.write(f"**URL:** [{restaurant_info['name']}]({restaurant_info['url']})")
 distances, indices = knn.kneighbors(X_scaled[selected_index].reshape(1, -1))
 
 # Display recommendations in a table format
+# Display recommendations in a table format
 if indices.size > 0:
     st.subheader('Recommended Restaurants')
     recommended_restaurants = df.iloc[indices.flatten()]
@@ -86,7 +87,7 @@ if indices.size > 0:
             'Name': recommended_restaurants['name'],
             'Rest Type': recommended_restaurants['rest_type'],
             'Cuisines': recommended_restaurants['cuisines'],
-            'URL': recommended_restaurants['url'].apply(lambda x: f"[{recommended_restaurants['name'].iloc[recommended_restaurants['url'] == x].values[0]}]({x})")
+            'URL': recommended_restaurants['url'].apply(lambda x: f"[{x.split('/')[-1]}]({x})")  # Use last part of URL as the display name
         })
         
         # Display the formatted DataFrame using st.table
