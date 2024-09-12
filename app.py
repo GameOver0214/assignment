@@ -10,7 +10,7 @@ df['cuisines'] = df['cuisines'].fillna('')  # Fill NaN with empty string
 df['cuisines'] = df['cuisines'].astype(str)  # Ensure all entries are strings
 
 # Function to recommend restaurants based on cosine similarity
-def recommend_restaurants(current_restaurant, df, num_recommendations=3):
+def recommend_restaurants(current_restaurant, df, num_recommendations=5):
     # Get the selected restaurant's cuisines
     current_cuisines = df.loc[df['name'] == current_restaurant, 'cuisines'].values[0]
 
@@ -32,7 +32,7 @@ st.title('Restaurant Recommendation System')
 
 # Restaurant selection
 st.subheader('Choose a Restaurant')
-restaurant_names = df['name'].tolist()
+restaurant_names = df['name'].tolist()df.drop_duplicates
 selected_restaurant = st.selectbox('Select a restaurant', restaurant_names)
 
 # Display selected restaurant details
