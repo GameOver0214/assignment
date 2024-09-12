@@ -5,10 +5,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 # Load the dataset
 df = pd.read_csv('zomato_extracted.csv')
-
-# Remove duplicates based on the restaurant name and reset the index
-df = df.drop_duplicates(subset='name').reset_index(drop=True)
-
+df = df.drop_duplicates(subset='name')
 df['cuisines'] = df['cuisines'].fillna('')  # Fill NaN with empty string
 df['cuisines'] = df['cuisines'].astype(str)  # Ensure all entries are strings
 
@@ -16,45 +13,26 @@ df['cuisines'] = df['cuisines'].astype(str)  # Ensure all entries are strings
 def recommend_restaurants(current_restaurant, df, num_recommendations=3):
     # Get the selected restaurant's cuisines
     current_cuisines = df.loc[df['name'] == current_restaurant, 'cuisines'].values[0]
-    
-    # Filter the dataframe to only include restaurants with matching cuisines
-    df_filtered = df[df['cuisines'].str.contains(current_cuisines, case=False, na=False)]
-    
-    # Exclude the currently selected restaurant from the recommendations
-    df_filtered = df_filtered[df_filtered['name'] != current_restaurant]
 
-    # Remove any remaining duplicate restaurants in the filtered DataFrame
-    df_filtered = df_filtered.drop_duplicates(subset='name')
-    
+    # Filter the dataframe to only include restaurants with matching cuisines
+    df_filtered = df[df['cuisines'].str.contains(current_cuisines, case=False, na=False) & (df['name'] != current_restaurant)]
+
     # Create a TF-IDF Vectorizer to analyze cuisines
     tfidf = TfidfVectorizer(stop_words='english')
-    tfidf_matrix = tfidf.fit_transform(df_filtered['cuisines'])
-    
-    # Compute the cosine similarity matrix
-    cosine_sim = cosine_similarity(tfidf_matrix, tfidf_matrix)
-    
-    # Get the index of the filtered restaurants
-    restaurant_indices = df_filtered.index.tolist()
-    
-    # Get the pairwise similarity scores
-    sim_scores = list(enumerate(cosine_sim))
-    
-    # Sort the filtered restaurants based on similarity scores
+	@@ -34,16 +43,18 @@ def recommend_restaurants(current_restaurant, df, num_recommendations=3):
     sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
 
     # Get the indices of the recommended restaurants
-    recommended_indices = [restaurant_indices[i[0]] for i in sim_scores[:num_recommendations]]  # top recommendations
-    
-    return df_filtered.iloc[recommended_indices][['name', 'rest_type', 'cuisines']].sort_values(by='name')
+    recommended_indices = [restaurant_indices[i[0]] for i in sim_scores[1:num_recommendations + 1]]  # exclude the first one (itself)
+
+    return df.iloc[recommended_indices][['name', 'rest_type', 'cuisines']].drop_duplicates().sort_values(by='name')
 
 # Streamlit app title
 st.title('Restaurant Recommendation System')
 
 # Restaurant selection
 st.subheader('Choose a Restaurant')
-
-# Populate dropdown list with unique restaurant names only
-restaurant_names = df['name'].drop_duplicates().tolist()
+restaurant_names = df['name'].tolist()
 selected_restaurant = st.selectbox('Select a restaurant', restaurant_names)
 
 # Display selected restaurant details
@@ -66,10 +44,8 @@ if not restaurant_info.empty:
     st.write(f"**URL:** [{restaurant_info['name'].values[0]}]({restaurant_info['url'].values[0]})")
 else:
     st.write("Restaurant not found. Please choose/enter another one!")
-
 # Get recommendations
 recommended_restaurants = recommend_restaurants(selected_restaurant, df)
-
 # Display recommendations in a table format
 if not recommended_restaurants.empty:
     st.subheader('Recommended Restaurants')
