@@ -1,5 +1,7 @@
 import streamlit as st
 import pandas as pd
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import linear_kernel
 
 # Load the dataset
 df = pd.read_csv('zomato_extracted.csv')
@@ -11,28 +13,36 @@ df['cuisines'] = df['cuisines'].astype(str)  # Ensure all entries are strings
 # Remove duplicate restaurant names for the dropdown
 unique_restaurant_names = df['name'].drop_duplicates().tolist()
 
-# Function to recommend restaurants based on the current restaurant's type
+# Function to recommend restaurants using TF-IDF
 def recommend_restaurants(current_restaurant, df, num_recommendations=3):
-    # Get the type of the current restaurant
-    rest_type = df[df['name'] == current_restaurant]['rest_type'].values
+    # Get the index of the current restaurant
+    idx = df.index[df['name'] == current_restaurant].tolist()
     
-    if len(rest_type) == 0:
+    if not idx:
         return [("Current restaurant information not found, please check the restaurant name.", "", "", "")]
     
-    # Filter restaurants with the same type as the current restaurant
-    same_type_restaurants = df[df['rest_type'] == rest_type[0]]
-    
-    # Exclude the current restaurant being viewed
-    recommendations = same_type_restaurants[same_type_restaurants['name'] != current_restaurant]
-    
-    if recommendations.empty:
-        return [("No restaurants of the same type were found.", "", "", "")]
-    
-    # Randomly recommend a specified number of restaurants, but ensure the number does not exceed available restaurants
-    num_recommendations = min(num_recommendations, len(recommendations))
-    recommended = recommendations.sample(n=num_recommendations)
+    idx = idx[0]
 
-    return [(rest['name'], rest['rest_type'], rest['cuisines'], rest['url']) for _, rest in recommended.iterrows()]
+    # TF-IDF Vectorization
+    tfidf = TfidfVectorizer(stop_words='english')
+    tfidf_matrix = tfidf.fit_transform(df['cuisines'])
+
+    # Calculate cosine similarity
+    cosine_sim = linear_kernel(tfidf_matrix[idx], tfidf_matrix).flatten()
+
+    # Get the indices of the most similar restaurants
+    similar_indices = cosine_sim.argsort()[-num_recommendations-1:-1][::-1]
+    
+    # Prepare recommendations
+    recommended = []
+    for i in similar_indices:
+        if df['name'][i] != current_restaurant:
+            recommended.append((df['name'][i], df['rest_type'][i], df['cuisines'][i], df['url'][i]))
+
+    if not recommended:
+        return [("No similar restaurants found.", "", "", "")]
+    
+    return recommended
 
 # Streamlit app title
 st.title('Restaurant Recommendation System')
@@ -51,7 +61,7 @@ if not restaurant_info.empty:
 else:
     st.write("Restaurant not found. Please choose/enter another one!")
 
-# Directly show recommendations without a button
+# Get recommendations using TF-IDF
 recommended_restaurants = recommend_restaurants(selected_restaurant, df)
 
 # Display recommendations in a table format if valid recommendations exist
