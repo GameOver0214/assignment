@@ -5,7 +5,10 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 # Load the dataset
 df = pd.read_csv('zomato_extracted.csv')
+
+# Remove duplicates based on the restaurant name and reset the index
 df = df.drop_duplicates(subset='name').reset_index(drop=True)
+
 df['cuisines'] = df['cuisines'].fillna('')  # Fill NaN with empty string
 df['cuisines'] = df['cuisines'].astype(str)  # Ensure all entries are strings
 
@@ -15,7 +18,13 @@ def recommend_restaurants(current_restaurant, df, num_recommendations=3):
     current_cuisines = df.loc[df['name'] == current_restaurant, 'cuisines'].values[0]
     
     # Filter the dataframe to only include restaurants with matching cuisines
-    df_filtered = df[df['cuisines'].str.contains(current_cuisines, case=False, na=False) & (df['name'] != current_restaurant)]
+    df_filtered = df[df['cuisines'].str.contains(current_cuisines, case=False, na=False)]
+    
+    # Exclude the currently selected restaurant from the recommendations
+    df_filtered = df_filtered[df_filtered['name'] != current_restaurant]
+
+    # Remove any remaining duplicate restaurants in the filtered DataFrame
+    df_filtered = df_filtered.drop_duplicates(subset='name')
     
     # Create a TF-IDF Vectorizer to analyze cuisines
     tfidf = TfidfVectorizer(stop_words='english')
@@ -34,16 +43,18 @@ def recommend_restaurants(current_restaurant, df, num_recommendations=3):
     sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
 
     # Get the indices of the recommended restaurants
-    recommended_indices = [restaurant_indices[i[0]] for i in sim_scores[1:num_recommendations + 1]]  # exclude the first one (itself)
+    recommended_indices = [restaurant_indices[i[0]] for i in sim_scores[:num_recommendations]]  # top recommendations
     
-    return df.iloc[recommended_indices][['name', 'rest_type', 'cuisines']].drop_duplicates().sort_values(by='name')
+    return df_filtered.iloc[recommended_indices][['name', 'rest_type', 'cuisines']].sort_values(by='name')
 
 # Streamlit app title
 st.title('Restaurant Recommendation System')
 
 # Restaurant selection
 st.subheader('Choose a Restaurant')
-restaurant_names = df['name'].tolist()
+
+# Populate dropdown list with unique restaurant names only
+restaurant_names = df['name'].drop_duplicates().tolist()
 selected_restaurant = st.selectbox('Select a restaurant', restaurant_names)
 
 # Display selected restaurant details
