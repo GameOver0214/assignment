@@ -4,7 +4,10 @@ import random
 
 # Load the dataset
 df = pd.read_csv('zomato_extracted.csv', encoding='ISO-8859-1')
-
+def clean_text(text):
+    if isinstance(text, str):
+        return text.encode('latin1').decode('utf8')
+    return text
 # Ensure 'cuisines' column is clean
 df['cuisines'] = df['cuisines'].fillna('')  # Fill NaN with empty string
 df['cuisines'] = df['cuisines'].astype(str)  # Ensure all entries are strings
