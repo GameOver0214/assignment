@@ -1,56 +1,36 @@
 import streamlit as st
 import pandas as pd
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
+import random
 
 # Load the dataset
 df = pd.read_csv('zomato_extracted.csv')
-df = df.drop_duplicates(subset='name')
+
+# Ensure 'cuisines' column is clean
 df['cuisines'] = df['cuisines'].fillna('')  # Fill NaN with empty string
 df['cuisines'] = df['cuisines'].astype(str)  # Ensure all entries are strings
 
-# Function to recommend restaurants based on cosine similarity
-# Function to recommend restaurants based on cosine similarity
-# Function to recommend restaurants based on cosine similarity
+# Function to recommend restaurants based on the current restaurant's type
 def recommend_restaurants(current_restaurant, df, num_recommendations=3):
-    # Get the selected restaurant's cuisines
-    current_cuisines = df.loc[df['name'] == current_restaurant, 'cuisines'].values
-    if len(current_cuisines) == 0:
-        st.write("Cuisines not found for the selected restaurant.")
-        return pd.DataFrame()  # Return an empty DataFrame
+    # Get the type of the current restaurant
+    rest_type = df[df['name'] == current_restaurant]['rest_type'].values
     
-    current_cuisines = current_cuisines[0]
-
-    # Filter the dataframe to only include restaurants with matching cuisines
-    df_filtered = df[df['cuisines'].str.contains(current_cuisines, case=False, na=False) & (df['name'] != current_restaurant)]
+    if len(rest_type) == 0:
+        return [("Current restaurant information not found, please check the restaurant name.", "")]
     
-    # Handle case where no matching restaurants are found
-    if df_filtered.empty:
-        st.write("No similar restaurants found. Here are some random recommendations instead:")
-        # Get random recommendations from the original dataframe
-        random_recommendations = df.sample(n=min(num_recommendations, len(df)))
-        return random_recommendations[['name', 'rest_type', 'cuisines']].drop_duplicates().sort_values(by='name')
-
-    # Create a TF-IDF Vectorizer to analyze cuisines
-    tfidf = TfidfVectorizer(stop_words='english')
-    tfidf_matrix = tfidf.fit_transform(df_filtered['cuisines'])
+    # Filter restaurants with the same type as the current restaurant
+    same_type_restaurants = df[df['rest_type'] == rest_type[0]]
     
-    # Compute cosine similarity
-    sim_matrix = cosine_similarity(tfidf_matrix)
-    restaurant_indices = df_filtered.index
+    # Exclude the current restaurant being viewed
+    recommendations = same_type_restaurants[same_type_restaurants['name'] != current_restaurant]
     
-    # Get the similarity scores
-    sim_scores = list(enumerate(sim_matrix[0]))
+    if recommendations.empty:
+        return [("No restaurants of the same type were found.", "")]
+    
+    # Randomly recommend a specified number of restaurants, but ensure the number does not exceed available restaurants
+    num_recommendations = min(num_recommendations, len(recommendations))
+    recommended = recommendations.sample(n=num_recommendations)
 
-    # Sort similarity scores
-    sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
-
-    # Get the indices of the recommended restaurants
-    recommended_indices = [restaurant_indices[i[0]] for i in sim_scores[1:num_recommendations + 1]]
-
-    return df.iloc[recommended_indices][['name', 'rest_type', 'cuisines']].drop_duplicates().sort_values(by='name')
-
-
+    return [(rest['name'], rest['rest_type'], rest['cuisines']) for _, rest in recommended.iterrows()]
 
 # Streamlit app title
 st.title('Restaurant Recommendation System')
@@ -66,21 +46,22 @@ if not restaurant_info.empty:
     st.write(f"**Name:** {selected_restaurant}")
     st.write(f"**Restaurant Type:** {restaurant_info['rest_type'].values[0]}")
     st.write(f"**Cuisines Type:** {restaurant_info['cuisines'].values[0]}")
-    st.write(f"**URL:** [{restaurant_info['name'].values[0]}]({restaurant_info['url'].values[0]})")
+    # Note: You can uncomment the following line if you want to display the restaurant URL
+    # st.write(f"**URL:** [{restaurant_info['name'].values[0]}]({restaurant_info['url'].values[0]})")
 else:
     st.write("Restaurant not found. Please choose/enter another one!")
-# Get recommendations
+
+# Directly show recommendations without a button
 recommended_restaurants = recommend_restaurants(selected_restaurant, df)
-# Display recommendations in a table format
-if not recommended_restaurants.empty:
+
+# Display recommendations in a table format if valid recommendations exist
+if recommended_restaurants[0][0] != "Current restaurant information not found, please check the restaurant name.":
     st.subheader('Recommended Restaurants')
     
-    # Creating clickable links for the restaurants using only the restaurant name
-    recommended_restaurants['Restaurant'] = recommended_restaurants.apply(
-        lambda row: f'<a href="{restaurant_info["url"].values[0]}">{row["name"]}</a>', axis=1
-    )
+    # Creating a dataframe to display recommendations in a table
+    recommendations_df = pd.DataFrame(recommended_restaurants, columns=["Restaurant", "Rest Type", "Cuisines"])
     
-    # Display the dataframe using st.markdown with unsafe_allow_html to render links
-    st.write(recommended_restaurants[['Restaurant', 'rest_type', 'cuisines']].to_html(escape=False, index=False), unsafe_allow_html=True)
+    # Display the dataframe using st.table to render it as a table
+    st.table(recommendations_df)
 else:
-    st.write("No recommendations found.")
+    st.write(recommended_restaurants[0][0])
