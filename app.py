@@ -13,7 +13,7 @@ df['cuisines'] = df['cuisines'].astype(str)  # Ensure all entries are strings
 # Remove duplicate restaurant names for the dropdown
 unique_restaurant_names = df['name'].drop_duplicates().tolist()
 
-# Function to recommend restaurants using TF-IDF
+# Function to recommend restaurants based on cuisines
 def recommend_restaurants(current_restaurant, df, num_recommendations=3):
     # Get the index of the current restaurant
     idx = df.index[df['name'] == current_restaurant].tolist()
@@ -23,26 +23,23 @@ def recommend_restaurants(current_restaurant, df, num_recommendations=3):
     
     idx = idx[0]
 
-    # TF-IDF Vectorization
-    tfidf = TfidfVectorizer(stop_words='english')
-    tfidf_matrix = tfidf.fit_transform(df['rest_type'])
+    # Get the cuisines of the selected restaurant
+    current_cuisines = df['cuisines'][idx]
 
-    # Calculate cosine similarity
-    cosine_sim = linear_kernel(tfidf_matrix[idx], tfidf_matrix).flatten()
-
-    # Get the indices of the most similar restaurants
-    similar_indices = cosine_sim.argsort()[-num_recommendations-1:-1][::-1]
+    # Filter restaurants based on similar cuisines
+    similar_restaurants = df[df['cuisines'].str.contains(current_cuisines, case=False, na=False)]
     
-    # Prepare recommendations
-    recommended = []
-    for i in similar_indices:
-        if df['name'][i] != current_restaurant:
-            recommended.append((df['name'][i], df['rest_type'][i], df['cuisines'][i], df['url'][i]))
+    # Exclude the current restaurant from recommendations
+    similar_restaurants = similar_restaurants[similar_restaurants['name'] != current_restaurant]
 
-    if not recommended:
-        return [("No similar restaurants found.", "", "", "")]
-    
-    return recommended
+    # If there are no similar restaurants, return an appropriate message
+    if similar_restaurants.empty:
+        return [("No similar restaurants found based on cuisines.", "", "", "")]
+
+    # Limit the number of recommendations
+    recommended = similar_restaurants.sample(n=min(num_recommendations, similar_restaurants.shape[0]))
+
+    return list(zip(recommended['name'], recommended['rest_type'], recommended['cuisines'], recommended['url']))
 
 # Streamlit app title
 st.title('Restaurant Recommendation System')
@@ -61,7 +58,7 @@ if not restaurant_info.empty:
 else:
     st.write("Restaurant not found. Please choose/enter another one!")
 
-# Get recommendations using TF-IDF
+# Get recommendations based on cuisines
 recommended_restaurants = recommend_restaurants(selected_restaurant, df)
 
 # Display recommendations in a table format if valid recommendations exist
