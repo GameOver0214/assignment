@@ -32,7 +32,7 @@ st.title('Restaurant Recommendation System')
 
 # Restaurant selection
 st.subheader('Choose a Restaurant')
-restaurant_names = df['name'].tolist()df.drop_duplicates
+restaurant_names = df['name'].tolist()
 selected_restaurant = st.selectbox('Select a restaurant', restaurant_names)
 
 # Display selected restaurant details
