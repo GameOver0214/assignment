@@ -3,7 +3,7 @@ import pandas as pd
 import random
 
 # Load the dataset
-df = pd.read_csv('zomato_extracted.csv')
+df = pd.read_csv('zomato_extracted.csv', encoding='ISO-8859-1')
 
 # Ensure 'cuisines' column is clean
 df['cuisines'] = df['cuisines'].fillna('')  # Fill NaN with empty string
