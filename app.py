@@ -10,12 +10,27 @@ df = pd.read_csv('zomato_extracted.csv')
 df['cuisines'] = df['cuisines'].fillna('')  # Fill NaN with empty string
 df['cuisines'] = df['cuisines'].astype(str)  # Ensure all entries are strings
 
-# Encode categorical features (cuisines)
+# Remove duplicate restaurant names for the dropdown
+unique_restaurant_names = df['name'].drop_duplicates().tolist()
+
+# One-hot encode the 'cuisines' column
 df_encoded = pd.get_dummies(df, columns=['cuisines'], prefix='cuisine')
+
+# Check for non-numeric data types
+print("DataFrame dtypes before scaling:")
+print(df_encoded.dtypes)
+
+# Drop non-numeric columns before scaling
+X = df_encoded.drop(columns=['name', 'rest_type', 'url'], errors='ignore')
+
+# Check for NaN values
+if X.isnull().values.any():
+    print("NaN values found in the features DataFrame.")
+    X.fillna(0, inplace=True)  # or choose another strategy for handling NaN
 
 # Standardize the features
 scaler = StandardScaler()
-X_scaled = scaler.fit_transform(df_encoded.drop(columns=['name', 'rest_type', 'url']))
+X_scaled = scaler.fit_transform(X)
 
 # Fit KNN model
 knn = NearestNeighbors(n_neighbors=5, algorithm='auto')
@@ -26,7 +41,7 @@ st.title('Restaurant Recommendation System')
 
 # Restaurant selection
 st.subheader('Choose a Restaurant')
-selected_restaurant = st.selectbox('Select a restaurant', df['name'].unique())
+selected_restaurant = st.selectbox('Select a restaurant', unique_restaurant_names)
 
 # Get the index of the selected restaurant
 selected_index = df[df['name'] == selected_restaurant].index[0]
