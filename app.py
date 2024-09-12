@@ -5,7 +5,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 # Load the dataset
 df = pd.read_csv('zomato_extracted.csv')
-
+df = df.drop_duplicates(subset='name').reset_index(drop=True)
 df['cuisines'] = df['cuisines'].fillna('')  # Fill NaN with empty string
 df['cuisines'] = df['cuisines'].astype(str)  # Ensure all entries are strings
 
