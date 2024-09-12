@@ -62,7 +62,7 @@ if recommended_restaurants[0][0] != "Current restaurant information not found, p
     recommendations_df = pd.DataFrame(recommended_restaurants, columns=["Restaurant", "Rest Type", "Cuisines", "URL"])
     
     # Make URLs clickable
-    recommendations_df['URL'] = recommendations_df['URL'].apply(lambda x: f"[Link]({x})")
+    recommendations_df['URL'] = recommendations_df.apply(lambda x: f"[{x['Restaurant']}]({x['URL']})", axis=1)
     
     # Display the dataframe using st.markdown for clickable URLs
     st.markdown(recommendations_df.to_markdown(index=False), unsafe_allow_html=True)
