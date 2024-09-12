@@ -19,7 +19,7 @@ def recommend_restaurants(current_restaurant, df, num_recommendations=3):
 
     # Create a TF-IDF Vectorizer to analyze cuisines
     tfidf = TfidfVectorizer(stop_words='english')
-	@@ -34,16 +43,18 @@ def recommend_restaurants(current_restaurant, df, num_recommendations=3):
+def recommend_restaurants(current_restaurant, df, num_recommendations=3):
     sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
 
     # Get the indices of the recommended restaurants
