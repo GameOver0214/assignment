@@ -1,94 +1,70 @@
 import streamlit as st
 import pandas as pd
-from sklearn.neighbors import NearestNeighbors
-from sklearn.preprocessing import StandardScaler
-
-# Streamlit app title
-st.title('Restaurant Recommendation System')
 
 # Load the dataset
-try:
-    df = pd.read_csv('zomato_extracted.csv')
-    
-    # Ensure 'cuisines' column is clean
-    df['cuisines'] = df['cuisines'].fillna('')  # Fill NaN with empty string
-    df['cuisines'] = df['cuisines'].astype(str)  # Ensure all entries are strings
+df = pd.read_csv('zomato_extracted.csv')
 
-except FileNotFoundError:
-    st.error("Dataset file not found. Please ensure the 'zomato_extracted.csv' file is in the correct directory.")
-    st.stop()  # Stop the execution of the script
-
-except pd.errors.EmptyDataError:
-    st.error("The dataset is empty. Please check the file content.")
-    st.stop()  # Stop the execution of the script
-
-except Exception as e:
-    st.error(f"An error occurred while loading the dataset: {e}")
-    st.stop()  # Stop the execution of the script
+# Ensure 'cuisines' column is clean
+df['cuisines'] = df['cuisines'].fillna('')  # Fill NaN with empty string
+df['cuisines'] = df['cuisines'].astype(str)  # Ensure all entries are strings
 
 # Remove duplicate restaurant names for the dropdown
 unique_restaurant_names = df['name'].drop_duplicates().tolist()
 
-# One-hot encode the 'cuisines' column
-df_encoded = pd.get_dummies(df, columns=['cuisines'], prefix='cuisine')
+# Function to recommend restaurants based on the current restaurant's type
+def recommend_restaurants(current_restaurant, df, num_recommendations=3):
+    # Get the type of the current restaurant
+    rest_type = df[df['name'] == current_restaurant]['rest_type'].values
+    
+    if len(rest_type) == 0:
+        return [("Current restaurant information not found, please check the restaurant name.", "", "", "")]
+    
+    # Filter restaurants with the same type as the current restaurant
+    same_type_restaurants = df[df['rest_type'] == rest_type[0]]
+    
+    # Exclude the current restaurant being viewed
+    recommendations = same_type_restaurants[same_type_restaurants['name'] != current_restaurant]
+    
+    if recommendations.empty:
+        return [("No restaurants of the same type were found.", "", "", "")]
+    
+    # Randomly recommend a specified number of restaurants, but ensure the number does not exceed available restaurants
+    num_recommendations = min(num_recommendations, len(recommendations))
+    recommended = recommendations.sample(n=num_recommendations)
 
-# Drop non-numeric columns (except for 'name', 'rest_type', and 'url')
-non_numeric_columns = df_encoded.select_dtypes(exclude=['number']).columns
-df_encoded.drop(columns=non_numeric_columns, inplace=True, errors='ignore')
+    return [(rest['name'], rest['rest_type'], rest['cuisines'], rest['url']) for _, rest in recommended.iterrows()]
 
-# Check for NaN values and drop rows with NaN values
-if df_encoded.isnull().values.any():
-    st.warning("NaN values found in the features DataFrame. Dropping rows with NaN values.")
-    df_encoded.dropna(inplace=True)
-
-# Check if there are enough rows left for processing
-if df_encoded.shape[0] < 1:
-    st.error("No valid data available for processing. Please check the dataset.")
-    st.stop()  # Stop the execution of the script
-
-# Prepare features for scaling
-X = df_encoded.drop(columns=['name', 'rest_type', 'url'], errors='ignore')
-
-# Standardize the features
-scaler = StandardScaler()
-X_scaled = scaler.fit_transform(X)
-
-# Fit KNN model
-knn = NearestNeighbors(n_neighbors=5, algorithm='auto')
-knn.fit(X_scaled)
+# Streamlit app title
+st.title('Restaurant Recommendation System')
 
 # Restaurant selection
 st.subheader('Choose a Restaurant')
 selected_restaurant = st.selectbox('Select a restaurant', unique_restaurant_names)
 
-# Get the index of the selected restaurant
-selected_index = df[df['name'] == selected_restaurant].index[0]
-
 # Display selected restaurant details
-restaurant_info = df.iloc[selected_index]
-st.write(f"**Name:** {restaurant_info['name']}")
-st.write(f"**Restaurant Type:** {restaurant_info['rest_type']}")
-st.write(f"**Cuisines Type:** {restaurant_info['cuisines']}")
-st.write(f"**URL:** [{restaurant_info['name']}]({restaurant_info['url']})")
-
-# Find similar restaurants using KNN
-distances, indices = knn.kneighbors(X_scaled[selected_index].reshape(1, -1))
-
-# Display recommendations in a table format
-if indices.size > 0:
-    st.subheader('Recommended Restaurants')
-    recommended_restaurants = df.iloc[indices.flatten()]
-    recommended_restaurants = recommended_restaurants[recommended_restaurants['name'] != selected_restaurant]
-    
-    if not recommended_restaurants.empty:
-        # Create a DataFrame for the recommended restaurants without URLs
-        recommended_df = recommended_restaurants[['name', 'rest_type', 'cuisines']]
-        recommended_df['name'] = recommended_df['name'].apply(lambda x: f"{x}")  # Just display the name
-        
-        # Display the dataframe using st.table
-        st.table(recommended_df)
-    else:
-        st.write("No recommendations available.")
+restaurant_info = df[df['name'] == selected_restaurant]
+if not restaurant_info.empty:
+    st.write(f"**Name:** {selected_restaurant}")
+    st.write(f"**Restaurant Type:** {restaurant_info['rest_type'].values[0]}")
+    st.write(f"**Cuisines Type:** {restaurant_info['cuisines'].values[0]}")
+    st.write(f"**URL:** [{restaurant_info['name'].values[0]}]({restaurant_info['url'].values[0]})")
 else:
-    st.write("No recommendations available.")
+    st.write("Restaurant not found. Please choose/enter another one!")
 
+# Directly show recommendations without a button
+recommended_restaurants = recommend_restaurants(selected_restaurant, df)
+
+# Display recommendations in a table format if valid recommendations exist
+if recommended_restaurants[0][0] != "Current restaurant information not found, please check the restaurant name.":
+    st.subheader('Recommended Restaurants')
+    
+    # Creating a dataframe to display recommendations in a table
+    recommendations_df = pd.DataFrame(recommended_restaurants, columns=["Restaurant", "Rest Type", "Cuisines", "URL"])
+    
+    # Make restaurant names clickable links
+    recommendations_df['URL'] = recommendations_df.apply(lambda x: f"[{x['Restaurant']}]({x['URL']})", axis=1)
+    
+    # Display the dataframe using st.markdown for clickable URLs
+    st.markdown(recommendations_df.to_markdown(index=False), unsafe_allow_html=True)
+else:
+    st.write(recommended_restaurants[0][0])
