@@ -11,6 +11,7 @@ df['cuisines'] = df['cuisines'].astype(str)  # Ensure all entries are strings
 
 # Function to recommend restaurants based on cosine similarity
 # Function to recommend restaurants based on cosine similarity
+# Function to recommend restaurants based on cosine similarity
 def recommend_restaurants(current_restaurant, df, num_recommendations=3):
     # Get the selected restaurant's cuisines
     current_cuisines = df.loc[df['name'] == current_restaurant, 'cuisines'].values
@@ -25,8 +26,10 @@ def recommend_restaurants(current_restaurant, df, num_recommendations=3):
     
     # Handle case where no matching restaurants are found
     if df_filtered.empty:
-        st.write("No similar restaurants found.")
-        return pd.DataFrame()  # Return an empty DataFrame
+        st.write("No similar restaurants found. Here are some random recommendations instead:")
+        # Get random recommendations from the original dataframe
+        random_recommendations = df.sample(n=min(num_recommendations, len(df)))
+        return random_recommendations[['name', 'rest_type', 'cuisines']].drop_duplicates().sort_values(by='name')
 
     # Create a TF-IDF Vectorizer to analyze cuisines
     tfidf = TfidfVectorizer(stop_words='english')
@@ -39,23 +42,14 @@ def recommend_restaurants(current_restaurant, df, num_recommendations=3):
     # Get the similarity scores
     sim_scores = list(enumerate(sim_matrix[0]))
 
-    # Debugging: Check what's in sim_scores
-    st.write("Similarity scores before sorting:", sim_scores)
-
-    if not sim_scores:
-        st.write("No similarity scores found.")
-        return pd.DataFrame()  # Return an empty DataFrame
-    
     # Sort similarity scores
     sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
-    
-    # Debugging: Check after sorting
-    st.write("Similarity scores after sorting:", sim_scores)
 
     # Get the indices of the recommended restaurants
     recommended_indices = [restaurant_indices[i[0]] for i in sim_scores[1:num_recommendations + 1]]
 
     return df.iloc[recommended_indices][['name', 'rest_type', 'cuisines']].drop_duplicates().sort_values(by='name')
+
 
 
 # Streamlit app title
