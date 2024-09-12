@@ -3,12 +3,28 @@ import pandas as pd
 from sklearn.neighbors import NearestNeighbors
 from sklearn.preprocessing import StandardScaler
 
-# Load the dataset
-df = pd.read_csv('zomato_extracted.csv')
+# Streamlit app title
+st.title('Restaurant Recommendation System')
 
-# Ensure 'cuisines' column is clean
-df['cuisines'] = df['cuisines'].fillna('')  # Fill NaN with empty string
-df['cuisines'] = df['cuisines'].astype(str)  # Ensure all entries are strings
+# Load the dataset
+try:
+    df = pd.read_csv('zomato_extracted.csv')
+    
+    # Ensure 'cuisines' column is clean
+    df['cuisines'] = df['cuisines'].fillna('')  # Fill NaN with empty string
+    df['cuisines'] = df['cuisines'].astype(str)  # Ensure all entries are strings
+
+except FileNotFoundError:
+    st.error("Dataset file not found. Please ensure the 'zomato_extracted.csv' file is in the correct directory.")
+    st.stop()  # Stop the execution of the script
+
+except pd.errors.EmptyDataError:
+    st.error("The dataset is empty. Please check the file content.")
+    st.stop()  # Stop the execution of the script
+
+except Exception as e:
+    st.error(f"An error occurred while loading the dataset: {e}")
+    st.stop()  # Stop the execution of the script
 
 # Remove duplicate restaurant names for the dropdown
 unique_restaurant_names = df['name'].drop_duplicates().tolist()
@@ -16,14 +32,22 @@ unique_restaurant_names = df['name'].drop_duplicates().tolist()
 # One-hot encode the 'cuisines' column
 df_encoded = pd.get_dummies(df, columns=['cuisines'], prefix='cuisine')
 
-# Select only numeric columns for scaling
-numeric_columns = df_encoded.select_dtypes(include=['number']).columns
-X = df_encoded[numeric_columns]
+# Drop non-numeric columns (except for 'name', 'rest_type', and 'url')
+non_numeric_columns = df_encoded.select_dtypes(exclude=['number']).columns
+df_encoded.drop(columns=non_numeric_columns, inplace=True, errors='ignore')
 
-# Check for NaN values
-if X.isnull().values.any():
-    print("NaN values found in the features DataFrame.")
-    X.fillna(0, inplace=True)  # or choose another strategy for handling NaN
+# Check for NaN values and drop rows with NaN values
+if df_encoded.isnull().values.any():
+    st.warning("NaN values found in the features DataFrame. Dropping rows with NaN values.")
+    df_encoded.dropna(inplace=True)
+
+# Check if there are enough rows left for processing
+if df_encoded.shape[0] < 1:
+    st.error("No valid data available for processing. Please check the dataset.")
+    st.stop()  # Stop the execution of the script
+
+# Prepare features for scaling
+X = df_encoded.drop(columns=['name', 'rest_type', 'url'], errors='ignore')
 
 # Standardize the features
 scaler = StandardScaler()
@@ -32,9 +56,6 @@ X_scaled = scaler.fit_transform(X)
 # Fit KNN model
 knn = NearestNeighbors(n_neighbors=5, algorithm='auto')
 knn.fit(X_scaled)
-
-# Streamlit app title
-st.title('Restaurant Recommendation System')
 
 # Restaurant selection
 st.subheader('Choose a Restaurant')
