@@ -16,12 +16,9 @@ unique_restaurant_names = df['name'].drop_duplicates().tolist()
 # One-hot encode the 'cuisines' column
 df_encoded = pd.get_dummies(df, columns=['cuisines'], prefix='cuisine')
 
-# Check for non-numeric data types
-print("DataFrame dtypes before scaling:")
-print(df_encoded.dtypes)
-
-# Drop non-numeric columns before scaling
-X = df_encoded.drop(columns=['name', 'rest_type', 'url'], errors='ignore')
+# Select only numeric columns for scaling
+numeric_columns = df_encoded.select_dtypes(include=['number']).columns
+X = df_encoded[numeric_columns]
 
 # Check for NaN values
 if X.isnull().values.any():
