@@ -27,19 +27,23 @@ def recommend_restaurants(current_restaurant, df, num_recommendations=5):
     # Filter restaurants by the same type but exclude the current restaurant
     similar_restaurants = df[(df['rest_type'] == current_rest_type) & (df['name'] != current_restaurant)]
 
+    # If no similar restaurants are found, return an empty list
+    if similar_restaurants.empty:
+        return []
+
     # Create a TF-IDF Vectorizer and fit it on the cuisines of similar restaurants
     tfidf = TfidfVectorizer(stop_words='english')
     tfidf_matrix = tfidf.fit_transform(similar_restaurants['cuisines'])
 
-    # Get the index of the current restaurant
-    idx = similar_restaurants.index[similar_restaurants['name'] == current_restaurant].tolist()[0]
+    # Get the index of the current restaurant from the original DataFrame
+    idx = df.index[df['name'] == current_restaurant].tolist()[0]
 
     # Compute the cosine similarity matrix
     cosine_sim = linear_kernel(tfidf_matrix, tfidf_matrix).flatten()
 
     # Get the indices of the most similar restaurants
     sim_indices = cosine_sim.argsort()[-num_recommendations:][::-1]
-    
+
     # Get the recommended restaurants
     recommended = similar_restaurants.iloc[sim_indices]
 
@@ -87,7 +91,7 @@ st.write(f"**Suggested Cuisine Type:** {suggested_cuisine}")
 recommended_restaurants = recommend_restaurants(selected_restaurant, df)
 
 # Check if recommendations are valid
-if recommended_restaurants and recommended_restaurants[0][0] != "Current restaurant information not found, please check the restaurant name.":
+if recommended_restaurants:
     st.subheader('Recommended Restaurants:')
     
     # Creating a dataframe to display recommendations
