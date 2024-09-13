@@ -1,9 +1,26 @@
 import streamlit as st
 import pandas as pd
 import random
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.datasets import load_iris
+
+# Load dataset
+data = load_iris()
+X, y = data.data, data.target
+
+# Split the data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.5, random_state=90)
+
+# Create and train a model
+model = RandomForestClassifier()
+model.fit(X_train, y_train)
 
 # Load the dataset
 df = pd.read_csv('zomato_extracted.csv')
+
+# Convert 'rating' to numeric, forcing errors to NaN
+df['rate'] = pd.to_numeric(df['rate'], errors='coerce')
 
 # Ensure 'cuisines' column is clean
 df['cuisines'] = df['cuisines'].fillna('')  # Fill NaN with empty string
@@ -30,7 +47,7 @@ def recommend_restaurants(current_restaurant, df, num_recommendations=3):
         return [("No cuisines information available for the selected restaurant.", "", "", "")]
 
     # Filter restaurants based on any of the cuisines of the selected restaurant and rating > 4
-    similar_restaurants = df[(df['cuisines'].apply(lambda x: any(cuisine in x for cuisine in cuisines_list))) & (df['rating'] > 4)]
+    similar_restaurants = df[(df['cuisines'].apply(lambda x: any(cuisine in x for cuisine in cuisines_list))) & (df['rate'] > 4)]
     
     # Exclude the current restaurant from recommendations
     similar_restaurants = similar_restaurants[similar_restaurants['name'] != current_restaurant]
@@ -63,10 +80,8 @@ else:
 
 # Suggest a cuisine type from the selected restaurant
 def suggest_cuisine(cuisines):
-    # Split the cuisines string into a list
     cuisines_list = [cuisine.strip() for cuisine in cuisines.split(',')]
     if cuisines_list:
-        # Randomly select one cuisine type
         return random.choice(cuisines_list)
     else:
         return "No cuisine types available"
@@ -88,9 +103,6 @@ if recommended_restaurants and recommended_restaurants[0][0] != "Current restaur
     # Remove duplicate rows
     recommendations_df = recommendations_df.drop_duplicates()
     
-    def create_details_link(url):
-        return f'<a href="{url}" target="_blank">More Details</a>'
-
     # Make restaurant names clickable links
     recommendations_df['URL'] = recommendations_df.apply(lambda x: f"[{x['Restaurant']}]({x['URL']})", axis=1)
     
