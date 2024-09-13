@@ -47,7 +47,7 @@ def recommend_restaurants(current_restaurant, df, num_recommendations=3):
         return [("No cuisines information available for the selected restaurant.", "", "", "")]
 
     # Filter restaurants based on any of the cuisines of the selected restaurant and rating > 4
-    similar_restaurants = df[(df['cuisines'].apply(lambda x: any(cuisine in x for cuisine in cuisines_list))) & (df['rate'] > 4)]
+    similar_restaurants = df[(df['cuisines'].apply(lambda x: any(cuisine in x for cuisine in cuisines_list))) & (df['rate'] > 3)]
     
     # Exclude the current restaurant from recommendations
     similar_restaurants = similar_restaurants[similar_restaurants['name'] != current_restaurant]
@@ -95,7 +95,7 @@ recommended_restaurants = recommend_restaurants(selected_restaurant, df)
 
 # Check if recommendations are valid
 if recommended_restaurants and recommended_restaurants[0][0] != "Current restaurant information not found, please check the restaurant name.":
-    st.subheader('Recommended Restaurants (with Rating > 4)')
+    st.subheader('Recommended Restaurants (with Rating > 3)')
     
     # Creating a dataframe to display recommendations in a table
     recommendations_df = pd.DataFrame(recommended_restaurants, columns=["Restaurant", "Rest Type", "Cuisines", "URL"])
