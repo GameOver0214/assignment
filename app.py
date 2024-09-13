@@ -15,7 +15,7 @@ df['cuisines'] = df['cuisines'].astype(str)  # Ensure all entries are strings
 unique_restaurant_names = df['name'].drop_duplicates().tolist()
 
 # Function to recommend restaurants based on TF-IDF
-def recommend_restaurants(current_restaurant, df, num_recommendations=3):
+def recommend_restaurants(current_restaurant, df, num_recommendations=5):
     # Create a TF-IDF Vectorizer and fit it on the cuisines
     tfidf = TfidfVectorizer(stop_words='english')
     tfidf_matrix = tfidf.fit_transform(df['cuisines'])
