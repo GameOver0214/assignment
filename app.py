@@ -16,17 +16,18 @@ unique_restaurant_names = df['name'].drop_duplicates().tolist()
 
 # Function to recommend restaurants based on TF-IDF and rest_type
 def recommend_restaurants(current_restaurant, df, num_recommendations=5):
-    # Get the current restaurant's type
+    # Get the current restaurant's type and cuisines
     current_info = df[df['name'] == current_restaurant]
     if current_info.empty:
         return [("Current restaurant information not found, please check the restaurant name.", "", "", "")]
     
     current_rest_type = current_info['rest_type'].values[0]
+    current_cuisines = current_info['cuisines'].values[0]
 
-    # Filter restaurants by the same type
-    similar_restaurants = df[df['rest_type'] == current_rest_type]
+    # Filter restaurants by the same type but exclude the current restaurant
+    similar_restaurants = df[(df['rest_type'] == current_rest_type) & (df['name'] != current_restaurant)]
 
-    # Create a TF-IDF Vectorizer and fit it on the cuisines
+    # Create a TF-IDF Vectorizer and fit it on the cuisines of similar restaurants
     tfidf = TfidfVectorizer(stop_words='english')
     tfidf_matrix = tfidf.fit_transform(similar_restaurants['cuisines'])
 
@@ -34,10 +35,10 @@ def recommend_restaurants(current_restaurant, df, num_recommendations=5):
     idx = similar_restaurants.index[similar_restaurants['name'] == current_restaurant].tolist()[0]
 
     # Compute the cosine similarity matrix
-    cosine_sim = linear_kernel(tfidf_matrix[idx], tfidf_matrix).flatten()
+    cosine_sim = linear_kernel(tfidf_matrix, tfidf_matrix).flatten()
 
     # Get the indices of the most similar restaurants
-    sim_indices = cosine_sim.argsort()[-num_recommendations-1:-1][::-1]
+    sim_indices = cosine_sim.argsort()[-num_recommendations:][::-1]
     
     # Get the recommended restaurants
     recommended = similar_restaurants.iloc[sim_indices]
