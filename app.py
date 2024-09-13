@@ -36,13 +36,14 @@ def recommend_restaurants(current_restaurant, df, num_recommendations=3):
     # Sort the restaurants based on similarity scores
     sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
 
-    # Get the scores of the most similar restaurants, excluding the current restaurant
+    # Get the indices of the most similar restaurants, excluding the current restaurant
     similar_indices = [i[0] for i in sim_scores if i[0] != idx][:num_recommendations]
 
-    # Get the details of recommended restaurants
+    # If no similar restaurants are found, return an appropriate message
     if not similar_indices:
         return [("No similar restaurants found.", "", "", "")]
     
+    # Get the details of recommended restaurants
     recommended = df.iloc[similar_indices][['name', 'rest_type', 'cuisines', 'url']]
     return list(zip(recommended['name'], recommended['rest_type'], recommended['cuisines'], recommended['url']))
 
@@ -81,7 +82,7 @@ if recommended_restaurants and recommended_restaurants[0][0] != "Current restaur
     
     recommendations_df = pd.DataFrame(recommended_restaurants, columns=["Restaurant", "Rest Type", "Cuisines", "URL"])
     
-    # Remove duplicate rows
+    # Remove duplicate rows based on restaurant names
     recommendations_df = recommendations_df.drop_duplicates(subset='Restaurant')
     
     for _, row in recommendations_df.iterrows():
