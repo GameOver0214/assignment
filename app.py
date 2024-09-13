@@ -42,7 +42,16 @@ def recommend_restaurants(current_restaurant, df, num_recommendations=5):
     # Get the recommended restaurants
     recommended = similar_restaurants.iloc[sim_indices]
 
-    return list(zip(recommended['name'], recommended['rest_type'], recommended['cuisines'], recommended['url']))
+    # Remove duplicates from recommendations
+    unique_recommendations = set()
+    filtered_recommendations = []
+    
+    for restaurant in recommended.itertuples():
+        if restaurant.name not in unique_recommendations:
+            unique_recommendations.add(restaurant.name)
+            filtered_recommendations.append((restaurant.name, restaurant.rest_type, restaurant.cuisines, restaurant.url))
+
+    return filtered_recommendations
 
 # Streamlit app title
 st.title('Restaurant Recommendation System')
