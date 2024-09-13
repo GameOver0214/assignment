@@ -14,28 +14,33 @@ df['cuisines'] = df['cuisines'].astype(str)  # Ensure all entries are strings
 # Remove duplicate restaurant names for the dropdown
 unique_restaurant_names = df['name'].drop_duplicates().tolist()
 
-# Function to recommend restaurants based on TF-IDF
+# Function to recommend restaurants based on TF-IDF and rest_type
 def recommend_restaurants(current_restaurant, df, num_recommendations=5):
-    # Create a TF-IDF Vectorizer and fit it on the cuisines
-    tfidf = TfidfVectorizer(stop_words='english')
-    tfidf_matrix = tfidf.fit_transform(df['cuisines'])
-    
-    # Get the index of the current restaurant
-    idx = df.index[df['name'] == current_restaurant].tolist()
-    
-    if not idx:
+    # Get the current restaurant's type
+    current_info = df[df['name'] == current_restaurant]
+    if current_info.empty:
         return [("Current restaurant information not found, please check the restaurant name.", "", "", "")]
     
-    idx = idx[0]
+    current_rest_type = current_info['rest_type'].values[0]
+
+    # Filter restaurants by the same type
+    similar_restaurants = df[df['rest_type'] == current_rest_type]
+
+    # Create a TF-IDF Vectorizer and fit it on the cuisines
+    tfidf = TfidfVectorizer(stop_words='english')
+    tfidf_matrix = tfidf.fit_transform(similar_restaurants['cuisines'])
+
+    # Get the index of the current restaurant
+    idx = similar_restaurants.index[similar_restaurants['name'] == current_restaurant].tolist()[0]
 
     # Compute the cosine similarity matrix
     cosine_sim = linear_kernel(tfidf_matrix[idx], tfidf_matrix).flatten()
-    
+
     # Get the indices of the most similar restaurants
     sim_indices = cosine_sim.argsort()[-num_recommendations-1:-1][::-1]
     
     # Get the recommended restaurants
-    recommended = df.iloc[sim_indices]
+    recommended = similar_restaurants.iloc[sim_indices]
 
     return list(zip(recommended['name'], recommended['rest_type'], recommended['cuisines'], recommended['url']))
 
@@ -68,7 +73,7 @@ def suggest_cuisine(cuisines):
 suggested_cuisine = suggest_cuisine(restaurant_info['cuisines'].values[0])
 st.write(f"**Suggested Cuisine Type:** {suggested_cuisine}")
 
-# Get recommendations based on TF-IDF
+# Get recommendations based on TF-IDF and rest_type
 recommended_restaurants = recommend_restaurants(selected_restaurant, df)
 
 # Check if recommendations are valid
