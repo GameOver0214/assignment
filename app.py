@@ -3,9 +3,12 @@ import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import linear_kernel
 
+# Display the logo at the top of the app
+st.image("logo.png", width=200)  # Adjust the width as needed
+
 # Load the dataset
 df = pd.read_csv('zomato_extracted.csv')
-st.image("logo.png", width=200)
+
 # Ensure 'cuisines' column is clean
 df['cuisines'] = df['cuisines'].fillna('')  # Fill NaN with empty string
 df['cuisines'] = df['cuisines'].astype(str)  # Ensure all entries are strings
