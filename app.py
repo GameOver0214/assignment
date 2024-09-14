@@ -5,7 +5,8 @@ from sklearn.metrics.pairwise import linear_kernel
 
 # Display the logo at the top of the app
 st.image("logo.jpg", width=500)  # Adjust the width as needed
-
+st.write("This System is build for people to get recommended restaurant based on a cuisines types!")
+st.write("Feel Free to get some recommended restaurant to reach your satisfactions!")
 # Load the dataset
 df = pd.read_csv('zomato_extracted.csv')
 
