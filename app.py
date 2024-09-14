@@ -5,7 +5,7 @@ from sklearn.metrics.pairwise import linear_kernel
 
 # Load the dataset
 df = pd.read_csv('zomato_extracted.csv')
-
+st.image("logo.png", width=200)
 # Ensure 'cuisines' column is clean
 df['cuisines'] = df['cuisines'].fillna('')  # Fill NaN with empty string
 df['cuisines'] = df['cuisines'].astype(str)  # Ensure all entries are strings
