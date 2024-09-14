@@ -4,7 +4,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import linear_kernel
 
 # Display the logo at the top of the app
-st.image("logo.jpg", width=200)  # Adjust the width as needed
+st.image("logo.jpg", width=1000)  # Adjust the width as needed
 
 # Load the dataset
 df = pd.read_csv('zomato_extracted.csv')
