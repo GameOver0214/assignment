@@ -10,7 +10,7 @@ st.write("Feel free to get some recommended restaurants to reach your satisfacti
 
 # Load the dataset
 df = pd.read_csv('zomato_extracted.csv')
-
+df.dropna(axis=0, inplace=True)
 # Ensure 'cuisines' column is clean
 df['cuisines'] = df['cuisines'].fillna('')  # Fill NaN with an empty string
 df['cuisines'] = df['cuisines'].astype(str)  # Ensure all entries are strings
