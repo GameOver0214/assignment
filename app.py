@@ -28,12 +28,12 @@ def recommend_restaurants(current_restaurant, df, num_recommendations=3):
     
     idx = idx[0]
 
-    # TF-IDF Vectorization
+    # TF-IDF Vectorization for cuisine types across the entire dataset
     tfidf = TfidfVectorizer(stop_words='english')
     tfidf_matrix = tfidf.fit_transform(df['cuisines'])
 
-    # Calculate cosine similarity
-    cosine_sim = linear_kernel(tfidf_matrix[idx], tfidf_matrix).flatten()
+    # Calculate cosine similarity between all restaurants based on cuisines
+    cosine_sim = linear_kernel(tfidf_matrix, tfidf_matrix[idx]).flatten()
 
     # Get the indices of the most similar restaurants
     similar_indices = cosine_sim.argsort()[-num_recommendations-1:-1][::-1]
