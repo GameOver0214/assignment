@@ -60,10 +60,10 @@ restaurant_info = df[df['name'] == selected_restaurant]
 if not restaurant_info.empty:
     st.write(f"**Name:** {selected_restaurant}")
     st.write(f"**Restaurant Type:** {restaurant_info['rest_type'].values[0]}")
-    st.write(f"**Restaurant Type:** {restaurant_info['rate'].values[0]}")
+    st.write(f"**Restaurant Rating:** {restaurant_info['rate'].values[0]}")
     st.write(f"**Cuisines Type:** {restaurant_info['cuisines'].values[0]}")
     st.write(f"**URL:** [{restaurant_info['name'].values[0]}]({restaurant_info['url'].values[0]})")
-    st.write(f"**Restaurant Type:** {restaurant_info['approx_cost(for two people)'].values[0]}")
+    st.write(f"**Average Cost(Two Person):** {restaurant_info['approx_cost(for two people)'].values[0]}")
 else:
     st.write("Restaurant not found. Please choose/enter another one!")
 
