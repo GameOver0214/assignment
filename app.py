@@ -20,18 +20,18 @@ unique_restaurant_names = df['name'].drop_duplicates().tolist()
 
 # Function to recommend restaurants using TF-IDF
 def recommend_restaurants(current_restaurant, selected_cuisine, df, num_recommendations=3):
-    # Filter restaurants based on the selected cuisine
-    df_filtered = df[df['cuisines'].str.contains(selected_cuisine, case=False, na=False)]
-    
-    # Get the index of the current restaurant in the filtered dataframe
-    idx = df_filtered.index[df_filtered['name'] == current_restaurant].tolist()
+    # Get the index of the current restaurant
+    idx = df.index[df['name'] == current_restaurant].tolist()
     
     if not idx:
-        return [("Current restaurant information not found or no matching restaurants for selected cuisine.", "", "", "", "", "")]
+        return [("Current restaurant information not found, please check the restaurant name.", "", "", "", "", "")]
     
     idx = idx[0]
 
-    # TF-IDF Vectorization for cuisine types in the filtered dataframe
+    # Filter restaurants by selected cuisine
+    df_filtered = df[df['cuisines'].str.contains(selected_cuisine, case=False, na=False)]
+
+    # TF-IDF Vectorization considering cuisines similarity
     tfidf = TfidfVectorizer(stop_words='english')
     tfidf_matrix = tfidf.fit_transform(df_filtered['cuisines'])
 
@@ -44,8 +44,15 @@ def recommend_restaurants(current_restaurant, selected_cuisine, df, num_recommen
     # Prepare recommendations
     recommended = []
     for i in similar_indices:
-        if df_filtered['name'][i] != current_restaurant:
-            recommended.append((df_filtered['name'][i], df_filtered['rate'][i], df_filtered['rest_type'][i], df_filtered['cuisines'][i], df_filtered['url'][i], df_filtered['approx_cost(for two people)'][i]))
+        if df_filtered['name'].iloc[i] != current_restaurant:
+            recommended.append((
+                df_filtered['name'].iloc[i], 
+                df_filtered['rate'].iloc[i], 
+                df_filtered['rest_type'].iloc[i], 
+                df_filtered['cuisines'].iloc[i], 
+                df_filtered['url'].iloc[i], 
+                df_filtered['approx_cost(for two people)'].iloc[i]
+            ))
 
     if not recommended:
         return [("No similar restaurants found.", "", "", "", "", "")]
@@ -90,7 +97,7 @@ if selected_cuisine:
     recommended_restaurants = recommend_restaurants(selected_restaurant, selected_cuisine, df)
 
     # Display recommendations in a table format if valid recommendations exist
-    if recommended_restaurants[0][0] != "Current restaurant information not found or no matching restaurants for selected cuisine.":
+    if recommended_restaurants[0][0] != "Current restaurant information not found, please check the restaurant name.":
         st.subheader('Recommended Restaurants')
 
         # Creating a dataframe to display recommendations in a table
