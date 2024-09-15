@@ -60,8 +60,10 @@ restaurant_info = df[df['name'] == selected_restaurant]
 if not restaurant_info.empty:
     st.write(f"**Name:** {selected_restaurant}")
     st.write(f"**Restaurant Type:** {restaurant_info['rest_type'].values[0]}")
+    st.write(f"**Restaurant Type:** {restaurant_info['rate'].values[0]}")
     st.write(f"**Cuisines Type:** {restaurant_info['cuisines'].values[0]}")
     st.write(f"**URL:** [{restaurant_info['name'].values[0]}]({restaurant_info['url'].values[0]})")
+    st.write(f"**Restaurant Type:** {restaurant_info['approx_cost(for two people)'].values[0]}")
 else:
     st.write("Restaurant not found. Please choose/enter another one!")
 
@@ -73,7 +75,7 @@ if recommended_restaurants[0][0] != "Current restaurant information not found, p
     st.subheader('Recommended Restaurants')
     
     # Creating a dataframe to display recommendations in a table
-    recommendations_df = pd.DataFrame(recommended_restaurants, columns=["Restaurant", "rate", "Rest Type", "Cuisines", "URL", "average_cost"])
+    recommendations_df = pd.DataFrame(recommended_restaurants, columns=["Restaurant", "rate", "Rest Type", "Cuisines", "URL", "approx_cost(for two people)"])
     
     # Make restaurant names clickable links
     recommendations_df['URL'] = recommendations_df.apply(lambda x: f"[{x['Restaurant']}]({x['URL']})", axis=1)
