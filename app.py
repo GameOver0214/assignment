@@ -18,9 +18,6 @@ df['cuisines'] = df['cuisines'].astype(str)  # Ensure all entries are strings
 # Remove duplicate restaurant names for the dropdown
 unique_restaurant_names = df['name'].drop_duplicates().tolist()
 
-# Extract unique cuisines for the cuisine dropdown
-unique_cuisines = df['cuisines'].str.split(',').explode().str.strip().drop_duplicates().tolist()
-
 # Function to recommend restaurants using TF-IDF
 def recommend_restaurants(current_restaurant, selected_cuisine, df, num_recommendations=3):
     # Filter restaurants based on the selected cuisine
@@ -62,12 +59,22 @@ st.title('Restaurant and Cuisine-Based Recommendation System')
 st.subheader('Choose a Restaurant')
 selected_restaurant = st.selectbox('Select a restaurant', unique_restaurant_names)
 
-# Cuisine selection
+# Extract cuisines available for the selected restaurant
+restaurant_info = df[df['name'] == selected_restaurant]
+if not restaurant_info.empty:
+    available_cuisines = restaurant_info['cuisines'].values[0].split(', ')
+else:
+    available_cuisines = []
+
+# Cuisine selection based on the selected restaurant
 st.subheader('Choose a Cuisine')
-selected_cuisine = st.selectbox('Select a cuisine', unique_cuisines)
+if available_cuisines:
+    selected_cuisine = st.selectbox('Select a cuisine', available_cuisines)
+else:
+    st.write("No cuisines available for the selected restaurant.")
+    selected_cuisine = None
 
 # Display selected restaurant details
-restaurant_info = df[df['name'] == selected_restaurant]
 if not restaurant_info.empty:
     st.write(f"**Name:** {selected_restaurant}")
     st.write(f"**Restaurant Type:** {restaurant_info['rest_type'].values[0]}")
@@ -78,20 +85,23 @@ if not restaurant_info.empty:
 else:
     st.write("Restaurant not found. Please choose/enter another one!")
 
-# Get recommendations using the selected restaurant and cuisine
-recommended_restaurants = recommend_restaurants(selected_restaurant, selected_cuisine, df)
+# Get recommendations using the selected restaurant and cuisine if cuisine is selected
+if selected_cuisine:
+    recommended_restaurants = recommend_restaurants(selected_restaurant, selected_cuisine, df)
 
-# Display recommendations in a table format if valid recommendations exist
-if recommended_restaurants[0][0] != "Current restaurant information not found or no matching restaurants for selected cuisine.":
-    st.subheader('Recommended Restaurants')
-    
-    # Creating a dataframe to display recommendations in a table
-    recommendations_df = pd.DataFrame(recommended_restaurants, columns=["Restaurant", "rate", "Rest Type", "Cuisines", "URL", "approx_cost(for two people)"])
-    
-    # Make restaurant names clickable links
-    recommendations_df['URL'] = recommendations_df.apply(lambda x: f"[{x['Restaurant']}]({x['URL']})", axis=1)
-    
-    # Display the dataframe using st.markdown for clickable URLs
-    st.markdown(recommendations_df.to_markdown(index=False), unsafe_allow_html=True)
+    # Display recommendations in a table format if valid recommendations exist
+    if recommended_restaurants[0][0] != "Current restaurant information not found or no matching restaurants for selected cuisine.":
+        st.subheader('Recommended Restaurants')
+
+        # Creating a dataframe to display recommendations in a table
+        recommendations_df = pd.DataFrame(recommended_restaurants, columns=["Restaurant", "rate", "Rest Type", "Cuisines", "URL", "approx_cost(for two people)"])
+
+        # Make restaurant names clickable links
+        recommendations_df['URL'] = recommendations_df.apply(lambda x: f"[{x['Restaurant']}]({x['URL']})", axis=1)
+
+        # Display the dataframe using st.markdown for clickable URLs
+        st.markdown(recommendations_df.to_markdown(index=False), unsafe_allow_html=True)
+    else:
+        st.write(recommended_restaurants[0][0])
 else:
-    st.write(recommended_restaurants[0][0])
+    st.write("Please select a valid cuisine.")
