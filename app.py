@@ -43,7 +43,7 @@ def recommend_restaurants(current_restaurant, df, min_cost, num_recommendations=
     recommended = []
     for i in similar_indices:
         if df['name'][i] != current_restaurant and df['approx_cost(for two people)'][i] > min_cost:
-            recommended.append((df['name'][i], df['rate'][i], df['rest_type'][i], df['cuisines'][i], df['url'][i], df['approx_cost(for two people)'][i]))
+            recommended.append((df['name'][i], df['rate'][i], df['rest_type'][i], df['cuisines'][i], df['url'][i]))
 
     if not recommended:
         return [("No similar restaurants found above the selected cost.", "", "", "")]
