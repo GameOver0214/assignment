@@ -73,7 +73,7 @@ if recommended_restaurants[0][0] != "Current restaurant information not found, p
     st.subheader('Recommended Restaurants')
     
     # Creating a dataframe to display recommendations in a table
-    recommendations_df = pd.DataFrame(recommended_restaurants, columns=["Restaurant", "Rest Type", "Cuisines", "URL"])
+    recommendations_df = pd.DataFrame(recommended_restaurants, columns=["Restaurant", "rate", "Rest Type", "Cuisines", "URL", "average_cost"])
     
     # Make restaurant names clickable links
     recommendations_df['URL'] = recommendations_df.apply(lambda x: f"[{x['Restaurant']}]({x['URL']})", axis=1)
