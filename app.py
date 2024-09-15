@@ -20,7 +20,7 @@ df['approx_cost(for two people)'] = pd.to_numeric(df['approx_cost(for two people
 unique_restaurant_names = df['name'].drop_duplicates().tolist()
 
 # Function to recommend restaurants using TF-IDF
-def recommend_restaurants(current_restaurant, df, cost_range, num_recommendations=3):
+def recommend_restaurants(current_restaurant, df, min_cost, num_recommendations=3):
     # Get the index of the current restaurant
     idx = df.index[df['name'] == current_restaurant].tolist()
     
@@ -39,14 +39,14 @@ def recommend_restaurants(current_restaurant, df, cost_range, num_recommendation
     # Get the indices of the most similar restaurants
     similar_indices = cosine_sim.argsort()[-num_recommendations-1:-1][::-1]
     
-    # Prepare recommendations, filtering by cost range
+    # Prepare recommendations, filtering by minimum cost
     recommended = []
     for i in similar_indices:
-        if df['name'][i] != current_restaurant and cost_range[0] <= df['approx_cost(for two people)'][i] <= cost_range[1]:
+        if df['name'][i] != current_restaurant and df['approx_cost(for two people)'][i] > min_cost:
             recommended.append((df['name'][i], df['rate'][i], df['rest_type'][i], df['cuisines'][i], df['url'][i], df['approx_cost(for two people)'][i]))
 
     if not recommended:
-        return [("No similar restaurants found in the selected cost range.", "", "", "")]
+        return [("No similar restaurants found above the selected cost.", "", "", "")]
     
     return recommended
 
@@ -57,9 +57,9 @@ st.title('Restaurant Recommendation System')
 st.subheader('Choose a Restaurant')
 selected_restaurant = st.selectbox('Select a restaurant', unique_restaurant_names)
 
-# Add a cost range slider for filtering recommendations
-st.subheader('Select Average Cost for Two People')
-cost_range = st.slider('Select the cost range', min_value=0, max_value=int(df['approx_cost(for two people)'].max()), value=(0, 500))
+# Add a cost filter slider for filtering recommendations based on a minimum cost
+st.subheader('Select Minimum Average Cost for Two People')
+min_cost = st.slider('Select the minimum cost', min_value=0, max_value=int(df['approx_cost(for two people)'].max()), value=0)
 
 # Display selected restaurant details
 restaurant_info = df[df['name'] == selected_restaurant]
@@ -73,8 +73,8 @@ if not restaurant_info.empty:
 else:
     st.write("Restaurant not found. Please choose/enter another one!")
 
-# Get recommendations using TF-IDF and filter by cost range
-recommended_restaurants = recommend_restaurants(selected_restaurant, df, cost_range)
+# Get recommendations using TF-IDF and filter by minimum cost
+recommended_restaurants = recommend_restaurants(selected_restaurant, df, min_cost)
 
 # Display recommendations in a table format if valid recommendations exist
 if recommended_restaurants[0][0] != "Current restaurant information not found, please check the restaurant name.":
